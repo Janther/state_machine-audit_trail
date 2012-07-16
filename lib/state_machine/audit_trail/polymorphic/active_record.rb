@@ -1,7 +1,7 @@
 # This is the class that does the actual logging.
 # We need one of these per ORM
 
-class StateMachine::AuditTrail::Backend::Mongoid < StateMachine::AuditTrail::Backend
+class StateMachine::AuditTrail::Polymorphic::ActiveRecord < StateMachine::AuditTrail::Polymorphic
 
   # Public writes the log to the database
   #
@@ -10,8 +10,6 @@ class StateMachine::AuditTrail::Backend::Mongoid < StateMachine::AuditTrail::Bac
   # from:   the state of the object prior to the event
   # to:     the state of the object after the event
   def log(object, event, from, to, timestamp = Time.now)
-    transition_class.create(foreign_key_field(object) => object, :event => event, :from => from, :to => to, :create_at => timestamp)
+    transition_class.create(state_machine_id: object.id, state_machine_type: object_type(object), event: event, from: from, to: to)
   end
-
-
 end

@@ -1,7 +1,7 @@
-class StateMachine::AuditTrail::Backend < Struct.new(:transition_class)
+class StateMachine::AuditTrail::Polymorphic < Struct.new(:transition_class)
 
-  autoload :Mongoid,      'state_machine/audit_trail/backend/mongoid'
-  autoload :ActiveRecord, 'state_machine/audit_trail/backend/active_record'
+  autoload :Mongoid,      'state_machine/audit_trail/polymorphic/mongoid'
+  autoload :ActiveRecord, 'state_machine/audit_trail/polymorphic/active_record'
 
   def log(object, event, from, to, timestamp = Time.now)
     raise NotImplemented, "Implement in a subclass."
@@ -15,9 +15,9 @@ class StateMachine::AuditTrail::Backend < Struct.new(:transition_class)
   # then, return from here the appropriate object based on which ORM the transition_class is using  
   def self.create_for_transition_class(transition_class)
     if Object.const_defined?('ActiveRecord') && transition_class.ancestors.include?(::ActiveRecord::Base)
-      return StateMachine::AuditTrail::Backend::ActiveRecord.new(transition_class)
+      return StateMachine::AuditTrail::Polymorphic::ActiveRecord.new(transition_class)
     elsif Object.const_defined?('Mongoid') && transition_class.ancestors.include?(::Mongoid::Document)
-      return StateMachine::AuditTrail::Backend::Mongoid.new(transition_class)
+      return StateMachine::AuditTrail::Polymorphic::Mongoid.new(transition_class)
     else
       raise NotImplemented, "Only support for ActiveRecord and Mongoid is included at this time"
     end
@@ -25,7 +25,7 @@ class StateMachine::AuditTrail::Backend < Struct.new(:transition_class)
 
   protected
 
-  def foreign_key_field(object)
-    object.class.base_class.name.foreign_key.to_sym
+  def object_type(object)
+    object.class.base_class.name.to_sym
   end
 end

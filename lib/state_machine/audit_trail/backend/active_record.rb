@@ -5,8 +5,4 @@ class StateMachine::AuditTrail::Backend::ActiveRecord < StateMachine::AuditTrail
     # right thing with regards to timezones.
     transition_class.create(foreign_key_field(object) => object.id, :event => event, :from => from, :to => to)
   end
-
-  def foreign_key_field(object)
-    object.class.base_class.name.foreign_key.to_sym
-  end
 end

@@ -10,21 +10,25 @@ module StateMachine::AuditTrail::TransitionAuditing
   # options: a Hash of options. keys that are used are :to => CustomTransitionClass 
   def store_audit_trail(options = {})
     state_machine = self
-    state_machine.transition_class_name = (options[:to] || default_transition_class_name).to_s
+    state_machine.transition_class_name = (options[:to] || default_transition_class_name(options[:polymorphic])).to_s
     state_machine.after_transition do |object, transition|
-      state_machine.audit_trail.log(object, transition.event, transition.from, transition.to)
+      state_machine.audit_trail(options[:polymorphic]).log(object, transition.event, transition.from, transition.to)
     end
 
     state_machine.owner_class.after_create do |object|
       if !object.send(state_machine.attribute).nil?
-        state_machine.audit_trail.log(object, nil, nil, object.send(state_machine.attribute))
+        state_machine.audit_trail(options[:polymorphic]).log(object, nil, nil, object.send(state_machine.attribute))
       end
     end
   end
 
   # Public returns an instance of the class which does the actual audit trail logging
-  def audit_trail
-    @transition_auditor ||= StateMachine::AuditTrail::Backend.create_for_transition_class(transition_class)
+  def audit_trail(polymorphic = false)
+    if polymorphic
+      @transition_auditor ||= StateMachine::AuditTrail::Polymorphic.create_for_transition_class(transition_class)
+    else
+      @transition_auditor ||= StateMachine::AuditTrail::Backend.create_for_transition_class(transition_class)
+    end
   end
 
   private
@@ -33,7 +37,11 @@ module StateMachine::AuditTrail::TransitionAuditing
     @transition_class ||= transition_class_name.constantize
   end
 
-  def default_transition_class_name
-    "#{owner_class.name}#{attribute.to_s.camelize}Transition"
+  def default_transition_class_name(polymorphic = false)
+    if polymorphic
+      "StateMachineTransition"
+    else
+      "#{owner_class.name}#{attribute.to_s.camelize}Transition"
+    end
   end
 end

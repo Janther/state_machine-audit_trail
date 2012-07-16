@@ -10,7 +10,14 @@ class StateMachine::AuditTrailGenerator < ::Rails::Generators::Base
 
 
   def create_model
-    Rails::Generators.invoke('model', [transition_class_name, "#{source_model.tableize.singularize}:references", "event:string", "from:string", "to:string", "created_at:timestamp", '--no-timestamps', '--fixture=false'])
+    if source_model.nil?
+      record do |m|
+        m.file "models/state_machine_transitions.rb", "app/models/state_machine_transitions.rb"
+        m.migration_template "migrate/create_state_machine_transitions.rb", "db/migrate", name: :create_state_machine_transitions
+      end
+    else
+      Rails::Generators.invoke('model', [transition_class_name, "#{source_model.tableize.singularize}:references", "event:string", "from:string", "to:string", "created_at:timestamp", '--no-timestamps', '--fixture=false'])
+    end
   end
   
   protected
