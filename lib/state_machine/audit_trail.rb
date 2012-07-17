@@ -11,6 +11,7 @@ end
 
 require 'state_machine/audit_trail/transition_auditing'
 require 'state_machine/audit_trail/backend'
+require 'state_machine/audit_trail/polymorphic'
 require 'state_machine/audit_trail/railtie' if defined?(::Rails)
 
 StateMachine::AuditTrail.setup

@@ -10,6 +10,6 @@ class StateMachine::AuditTrail::Polymorphic::ActiveRecord < StateMachine::AuditT
   # from:   the state of the object prior to the event
   # to:     the state of the object after the event
   def log(object, event, from, to, timestamp = Time.now)
-    transition_class.create(state_machine_id: object.id, state_machine_type: object_type(object), event: event, from: from, to: to)
+    transition_class.create(auditable_id: object.id, auditable_type: object_type(object), event: event, from: from, to: to)
   end
 end
